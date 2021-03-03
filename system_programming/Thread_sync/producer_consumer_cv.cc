@@ -43,7 +43,7 @@ void consumer(int id)
             product = std::move(queue.front());
             queue.pop();
         }
-        // 释放锁
+        // 释放锁(锁的粒度一定要小！)
         // 当前队列不满，通知生产者可以进行生产
         notFull.notify_one();
         if(product == "quit!")
