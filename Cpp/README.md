@@ -1,4 +1,4 @@
-# 一、C++语法
+# 一、C++关键字
 
 ## const关键字
 ### 1.用于修饰对象
@@ -110,5 +110,56 @@ int num = Foo::getNum();
 ```
 ---
 
+## new/delete运算符
+### 1.malloc/free
+我们知道在c语言中，如果想在堆空间申请一片内存，则需要调用：
+```c
+void* malloc(size_t size);
+```
+失败会返回```NULL```；得到所需内存后，我们将其强转为所需的类型的指针；在结束使用后，需要调用：
+```c
+void free(void *ptr); // ptr为malloc所得到的指针
+```
+对申请的内存空间进行释放，避免内存泄漏。
 
+### 2. 与malloc/free的关系
+```new/delete```运算符，在实现中调用了```malloc/free```，但是**通过编译器来进行了更多的更智能的操作**:
+* 无需用户计算所需内存空间大小
+* 转换为与所需类型严格匹配的指针
+* 会调用构造/析构函数
 
+具体过程如下所示：
+* 不带有指针成员的类```class Complex```:
+    * new
+![avatar](./imgs/new_complex.jpg)
+    * delete
+![avatar](./imgs/delete_complex.png)
+
+* 带有指针成员的类```class String```:
+    * new
+![avatar](./imgs/new_string.png)
+    * delete
+![avatar](./imgs/delete_string.png)
+
+### 3. 与malloc/free的区别
+通过以上可以发现，两者存在以下区别：
+|特征|new/delete|malloc/free|
+|:--:|:--:|:--:|
+|本质|运算符|c库函数|
+|申请内存所在空间|自由储存区|堆空间|
+|分配成功|完整类型指针|void*|
+|分配失败|bad_alloc异常|NULL|
+|分配内存大小|编译器使用sizeof得出|用户计算并指定|
+|处理数组|new[...] / delete[...]|用户计算并指定|
+|扩充已分配的内存|无法直观处理|realloc|
+|是否相互调用|可以调用|不能调用new/delete|
+|分配时内存不足|客户可以定制处理|只能返回NULL|
+|函数重载|允许|不允许|
+|构造/析构函数|调用|不调用|
+
+https://www.cnblogs.com/engraver-lxw/p/8600816.html
+
+---
+# 二、智能指针
+怎么发现或者验证当前程序中出现了循环引用？
+# 三、
