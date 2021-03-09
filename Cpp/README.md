@@ -1,3 +1,5 @@
+[TOC]
+
 # 一、C++关键字
 
 ## const关键字
@@ -73,7 +75,7 @@ static void foo()
 {
     int local_var = 0;
 }
-```
+ ```
 ```static```修饰的普通函数：
 * 可见域为定义该函数的文件：可以防止与他人的函数重名。
 
@@ -107,7 +109,7 @@ static int Foo::num_of_created_ = 0; // 该变量为Foo类共享，所以在类�
 * 不依赖于对象存在，可直接通过类名调用；但是不能在其中使用类的非静态成员。
 ```cpp
 int num = Foo::getNum();
-```
+ ```
 ---
 
 ## new/delete运算符
@@ -122,7 +124,7 @@ void free(void *ptr); // ptr为malloc所得到的指针
 ```
 对申请的内存空间进行释放，避免内存泄漏。
 
-### 2. 与malloc/free的关系
+### 2.与malloc/free的关系
 ```new/delete```运算符，在实现中调用了```malloc/free```，但是**通过编译器来进行了更多的更智能的操作**:
 * 无需用户计算所需内存空间大小
 * 转换为与所需类型严格匹配的指针
@@ -158,6 +160,36 @@ void free(void *ptr); // ptr为malloc所得到的指针
 |构造/析构函数|调用|不调用|
 
 https://www.cnblogs.com/engraver-lxw/p/8600816.html
+
+### 4.sizeof关键字确定所需空间大小
+可以通过```sizeof()```来确定基本类型与类类型的大小。
+其中基本类型大小会根据机器平台有变；**而类类型大小由类中所含类型和内存对齐原则决定**
+```cpp
+class A   // sizeof(A) = 4
+{
+    int i;
+};
+
+class B   // sizeof(B) = 8
+{
+    int i;
+    char ch1;
+};
+
+class C   // sizeof(c) = 8
+{
+    int i;
+    char ch1;
+    char ch2;
+};
+
+class D   // sizeof(D) = 12
+{
+    char ch1;
+    int i;
+    char ch2;
+};
+ ```
 
 ---
 # 二、智能指针
