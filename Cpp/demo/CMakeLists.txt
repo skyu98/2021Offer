@@ -1,1 +1,3 @@
 add_executable(sizeof_test sizeof_test.cc)
+add_executable(CharInput_test CharInput_test.cc)
+add_executable(ListInput_test ListInput_test.cc)
