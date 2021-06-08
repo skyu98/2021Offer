@@ -62,6 +62,9 @@ https://www.cnblogs.com/wanpengcoder/p/5356776.html
 
 https://blog.csdn.net/u012813201/article/details/70211255
 
+## IP
+* 1. dotted decimal <---> hex number
+
 ---
 # Linux 网络编程
 ## 常见Linux系统指令

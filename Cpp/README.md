@@ -1,4 +1,12 @@
 [TOC]
+# C++ 和 C 的区别
+* C++**几乎**是C的超集——C只有少量的特性是C++没有的（*变长数组VLA*）
+<br>
+* 早期C++的程序基本上可以翻译成C代码再编译——C++在语言层面上提供了更便捷的使用方法
+<br>
+* 面向对象和面向过程？ ——**OOP只是一种思想！并不是某种语言的特性！** C++、Java等语言只是**在语言层面很好地支持和包含了这种思想**。
+<br>
+* **C也能实现封装、继承和多态！** ./demo/OOP_C/
 
 # 一、C++关键字
 
@@ -79,7 +87,8 @@ static void foo()
 }
  ```
 ```static```修饰的普通函数：
-* 可见域为定义该函数的文件：可以防止与他人的函数重名。
+* 可见域为定义该函数的文件：可以防止与他人的函数重名。普通的inline函数一般可以搭配static使用。
+https://zhuanlan.zhihu.com/p/132726037
 
 ### 3.用于修饰类成员对象、函数
 ```cpp
@@ -198,7 +207,7 @@ class D   // sizeof(D) = 12
 * 2.当开辟的空间大128K时，```mmap()```系统调用函数来在文件映射区域空间来开辟。
 
 ---
-## virtual
+## virtual关键字
 ### 1.虚函数
 ```cpp
 Base* p = new Derived();
@@ -234,4 +243,39 @@ p->func(arg); // (*(ptr->_vptr)[n](p, arg))
 
 
 怎么发现或者验证当前程序中出现了循环引用？
-# 三、
+
+
+# 三、面向对象编程
+
+## 继承
+
+1. 子类的初始化列表中不能直接初始化父类的成员变量
+```cpp
+class Base {
+public:
+    Base(int id) : id_(id) {}
+
+private:
+    int id_;
+};
+
+class Derived : public Base {
+public:
+    Derived(int id, const string& name)
+        : id_(id),    // error: class ‘Derived’ does not have any field named ‘id_’
+          name_(name) {
+
+    }
+
+private:
+    string name_;
+};
+```
+在执行子类的初始化列表之前，会先执行父类的构造函数，所以这里不能二次初始化；**想在初始化列表初始化父类的成员变量，只需要在其中调用父类的构造函数：**
+```cpp
+Derived(int id, const string& name)
+        : Base(id),   // no error
+          name_(name) {
+
+    }
+```
