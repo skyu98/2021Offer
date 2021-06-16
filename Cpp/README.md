@@ -6,7 +6,7 @@
 <br>
 * 面向对象和面向过程？ ——**OOP只是一种思想！并不是某种语言的特性！** C++、Java等语言只是**在语言层面很好地支持和包含了这种思想**。
 <br>
-* **C也能实现封装、继承和多态！** ./demo/OOP_C/
+* [**C也能实现封装、继承和多态！**](./demo/OOP_C/main.c)
 
 # 一、C++关键字
 
@@ -176,35 +176,33 @@ https://www.cnblogs.com/engraver-lxw/p/8600816.html
 可以通过```sizeof()```来确定基本类型与类类型的大小。
 其中基本类型大小会根据机器平台有变；**而类类型大小由类中所含类型和内存对齐原则决定**
 ```cpp
-class A   // sizeof(A) = 4
-{
+class A {// sizeof(A) = 4
     int i;
 };
 
-class B   // sizeof(B) = 8
-{
+class B { // sizeof(B) = 8
     int i;
     char ch1;
 };
 
-class C   // sizeof(c) = 8
-{
+class C { // sizeof(c) = 8
     int i;
     char ch1;
     char ch2;
 };
 
-class D   // sizeof(D) = 12
-{
+class D { // sizeof(D) = 12
     char ch1;
     int i;
     char ch2;
 };
  ```
+
+
 ### 5.malloc底层实现
-* 1.当开辟的空间小于128K时，malloc 的底层实现是系统调用函数```brk()```，其主要移动指针```_enddata```(此时的 ```_enddata```指的是 Linux 地址空间中堆段的末尾地址，不是数据段的末尾地址)
+* 1.当开辟的空间小于128K时，malloc 的底层实现是系统调用函数```brk()```，其主要移动指针```_enddata```(**此时的 ```_enddata```指的是 Linux 地址空间中堆段的末尾地址，不是数据段的末尾地址**)
 <BR>
-* 2.当开辟的空间大128K时，```mmap()```系统调用函数来在文件映射区域空间来开辟。
+* 2.当开辟的空间大128K时，```mmap()```系统调用函数来在**文件映射区域空间**来开辟。
 
 ---
 ## virtual关键字
@@ -217,7 +215,7 @@ p->func(arg); // (*(ptr->_vptr)[n](p, arg))
     * 在编译期**只能确定是Base*类型的指针变量**，不能确定到底指向的是何类型；
     * 在运行期，通过**虚函数表**来决定具体执行哪一个函数
 <br>
-* 虚函数表
+* 虚函数表(**具体实现见第三章多态部分**)
     * 虚函数表的**地址**放在实例头部；通过首部的**虚函数表指针**获得虚函数表
     * 在虚函数中查找对应的函数实现
     * 未被覆盖的虚函数，则完全保留父类的
@@ -233,11 +231,65 @@ p->func(arg); // (*(ptr->_vptr)[n](p, arg))
     * **析构函数一定要是虚函数**
     否则通过父类指针指向的子类，**在析构时只会调用父类的析构函数，而不会调用自己的析构函数，造成内存泄漏**。
 
-[虚函数实现机理](https://blog.csdn.net/haoel/article/details/1948051/?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_baidulandingword-3&spm=1001.2101.3001.4242)
-
 ### 2.虚继承
 虚继承用于解决多继承条件下的菱形继承问题（浪费存储空间、**存在二义性**）。
 
+### 3.虚函数表的实现（⭐️）
+[虚函数实现机理（在多继承部分有错误）](https://blog.csdn.net/haoel/article/details/1948051/?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_baidulandingword-3&spm=1001.2101.3001.4242)
+[虚函数实现机理（目前而言最正确的）](https://zhuanlan.zhihu.com/p/322529471?utm_source=wechat_session&utm_medium=social&utm_oi=830078056713568256&s_r=0)
+
+**首先明确派生类的虚函数表的生成规则：**
+* *将基类虚表中的内容**拷贝一份**放到子类虚表中*。
+* 如果派生类重写了基类某个虚函数，用派生类自己的虚函数替换原先基类虚函数的入口地址（重写）。
+* 如果派生类增加了新的虚函数**且有多个虚表（多重继承）**，将会把**新的虚函数地址增加到第一个虚表中**，按照其在类中声明次序依次增加到虚表的最后。
+* 虚表存的是虚函数指针，不是虚函数，虚函数和普通函数一样的，都是存在代码段的，只是他的指针又存到了虚表中。另外对象中存的不是虚表，存的是虚表指针。
+
+#### 3.1 单继承时的虚函数表
+```cpp
+class A {
+public:
+    virtual func1() {}
+private:
+    int a_;
+};
+
+class B : public A {
+public:
+    virtual func1() {}
+private:
+    int b_;
+}
+```
+* A和B都有自己的虚函数表，表的地址放在每个对象的头部。
+* A类的虚表是编译器构建，其中放有A类所有的**虚函数**地址。B类的虚表是**先拷贝了一份A类的虚表，并对其中有重写的虚函数进行覆盖**。
+* 如果B类再派生出一个C类，C类的虚表也是先先拷贝了一份B类的虚表，并对其中有重写的虚函数进行覆盖——所以**单继承的结构中，每个派生类都只会有一个虚表**，也就只会有一个虚表指针放在对象的头部。
+
+#### 3.2 多继承时的虚函数表
+```cpp
+class Base1 {
+public:
+    virtual int func1() {}
+private:
+    int b1_;
+};
+
+class Base2 {
+public:
+    virtual int func2() {}
+private:
+    int b2_;
+};
+
+class Derived : public Base1, public Base2 {
+public:
+    virtual int func1() {}
+    virtual int func2() {}
+private:
+    int d_;
+};  
+```
+* 按照派生类生成虚函数表的规则，Derived类将拷贝两个父类的虚表，并且分别覆盖其中被重写的虚函数。
+* 在这里，**Derived类有两个虚表指针，分别放在两个sub-object的开头**（具体见实验）
 ---
 # 二、智能指针
 
