@@ -236,7 +236,7 @@ p->func(arg); // (*(ptr->_vptr)[n](p, arg))
 
 ### 3.虚函数表的实现（⭐️）
 [虚函数实现机理（在多继承部分有错误）](https://blog.csdn.net/haoel/article/details/1948051/?utm_medium=distribute.pc_relevant.none-task-blog-baidujs_baidulandingword-3&spm=1001.2101.3001.4242)
-[虚函数实现机理（目前而言最正确的）](https://zhuanlan.zhihu.com/p/322529471?utm_source=wechat_session&utm_medium=social&utm_oi=830078056713568256&s_r=0)
+[虚函数实现机理（目前而言最正确的）](https://zhuanlan.zhihu.com/p/41309205)
 
 **首先明确派生类的虚函数表的生成规则：**
 * *将基类虚表中的内容**拷贝一份**放到子类虚表中*。
@@ -290,6 +290,8 @@ private:
 ```
 * 按照派生类生成虚函数表的规则，Derived类将拷贝两个父类的虚表，并且分别覆盖其中被重写的虚函数。
 * 在这里，**Derived类有两个虚表指针，分别放在两个sub-object的开头**（具体见实验）
+* **多继承时，不同的Base类型指针指向的地址不再固定在对象起始处**，而是有对应的偏移。(**在向上转换时（子类转化为基类），编译器会自动给转换的基类指针加上对应基类在子类对象中的偏移位置，使得基类指针指向子类对象中对应基类的虚指针所在的位置。**)
+* *更深一点*：Derived中的Base1在这里是**主基类**，它的**虚表中放有Derived所有的虚函数（包括重写Base2中的函数）**，而Base2的虚表中，放的是`Thunk Derived::func2()`，即会**地址偏移到Base1的虚表中调用函数**。
 ---
 # 二、智能指针
 
