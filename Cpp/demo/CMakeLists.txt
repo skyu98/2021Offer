@@ -5,3 +5,4 @@ add_executable(oop_c_test OOP_C/main.c OOP_C/Shape.c OOP_C/Rectangle.c OOP_C/Cir
 add_executable(Pointer_Ref Pointer_Ref.cc)
 add_executable(Inheritance_test inheritance.cc)
 add_executable(Diamond_inheritance Diamond_inheritance.cc)
+add_executable(Split_test split.cc)
