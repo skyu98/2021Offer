@@ -300,6 +300,8 @@ private:
 * *更深一点*：Derived中的Base1在这里是**主基类**，它的**虚表中放有Derived所有的虚函数（包括重写Base2中的函数）**，而Base2的虚表中，放的是`Thunk Derived::func2()`，即会**地址偏移到Base1的虚表中调用函数**。
 ---
 # 二、智能指针
+[陈硕大佬的文章](https://blog.csdn.net/solstice/article/details/8547547)
+
 ![avatar](./imgs/shared_ptr.png)
 
 ## 1. 线程安全
