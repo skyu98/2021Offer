@@ -8,6 +8,27 @@
 <br>
 * [**C也能实现封装、继承和多态！**](https://blog.csdn.net/onlyshi/article/details/81672279?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.baidujs&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.baidujs)
 
+# 基础知识
+## 1.函数的调用过程
+**核心：`%rsp`栈顶指针的动态变化过程**
+
+如函数P调用函数Q：
+* P的栈帧中：
+    * 首先**作为上一个函数的Callee**，P需要将**Callee寄存器中的数据push保存**
+    * **作为Caller**，将自己需要保存的数据，保存在Callee寄存器中（因为这样从Q中返回时保证不会被改写）；不能保存在寄存器中的数据，就申请内存保存在栈上作为局部变量（不会对齐）。
+    * 将需要传递的参数，保存在**参数寄存器**中（6个整形变量）；多出的参数也保存在栈上（内存对齐为8字节的倍数）。
+    * `call Q `（**分为两步：1.将返回地址%rip压栈 2.jmp到Q**）
+* Q的栈帧中：
+    * 重复上述步骤；
+    * 完成自己的函数任务
+    * **pop恢复Callee寄存器中的数据**
+    * ret指令：此时**%rsp指向的就是之前压栈的返回地址**，所以只需要从这里继续执行就完成了返回
+
+![avatar](./imgs/func_stack.jpg)
+
+## 2. 链接
+
+
 # 一、C++关键字
 
 ## const关键字
@@ -360,3 +381,39 @@ Derived(int id, const string& name)
 
     }
 ```
+
+---
+# 四、C++11新特性
+
+* 1. 智能指针（见第二章）
+
+* 2. `lambda`匿名函数
+```cpp
+// lambda func
+auto func1 = [int& total, int offset](const Foo& elem)->void {
+    total += elem.getVal() + offset;
+};
+
+// actually a class is generated
+class _SomeCompilerGeneratedName_ {
+public:
+    _SomeCompilerGeneratedName_(int& total, int offset)
+    : total_(total),
+      offset_(offset) {
+
+    }
+
+    void operator() (const Foo& elem) {
+        total_ += elem.getVal() + offset_;
+    }
+private: 
+    int& total_; // Captured by ref 
+    int offset_; // Captured by value
+};
+
+// equals
+auto func2 =  _SomeCompilerGeneratedName_(total, offset);
+func1(elem);
+func2(elem);
+```
+
