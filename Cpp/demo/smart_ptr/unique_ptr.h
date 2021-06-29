@@ -8,6 +8,12 @@ public:
     Unique_ptr(Unique_ptr&& that) : ptr_(that.ptr_) {
         that.ptr_ = nullptr;
     }
+    Unique_ptr& operator=(Unique_ptr<T>&& that) {
+        Unique_ptr<T>().swap(*this);
+        ptr_ = that.ptr_;
+        that.ptr_ = nullptr;
+        return *this;
+    };
 
     Unique_ptr(const Unique_ptr&) = delete;
     Unique_ptr& operator=(const Unique_ptr&) = delete;
@@ -16,13 +22,15 @@ public:
         delete ptr_;
     }
 
-    T& operator*() const {
-        return *ptr_;
+    void swap(Unique_ptr<T>& that) {
+        std::swap(ptr_, that.ptr_);
     }
 
-    T* operator->() const {
-        return ptr_;
-    }
+    T& operator*() const { return *ptr_;}
+
+    T* operator->() const { return ptr_; }
+
+    T* get() const { return ptr_; }
 
     T* release() {
         T* ptr = ptr_;

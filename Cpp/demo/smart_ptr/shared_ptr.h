@@ -25,11 +25,45 @@ class Shared_ptr;
 template <typename T>
 class Shared_ptr {
 public:
-    Shared_ptr(T* ptr)
-        : use_count_(new int(0)),
-          ptr_(ptr) {
-        ++(*use_count_);
-    };
+    Shared_ptr() : ptr_(nullptr), use_count_(nullptr) {}
+    explicit Shared_ptr(T* ptr) : ptr_(ptr), use_count_(ptr_ ? new int(1) : nullptr) {};
+    Shared_ptr(const Shared_ptr<T>& that)
+        : ptr_(that.ptr_),
+          use_count_(that.use_count_) {
+        if(ptr_) ++(*use_count_);
+    }
+    Shared_ptr(Shared_ptr<T>&& that)
+        : ptr_(that.ptr_),
+          use_count_(that.use_count_) {
+
+        // 源指针是右值，将其置空
+        that.ptr_ = nullptr;
+        that.use_count_ = nullptr;
+    }
+
+    Shared_ptr& operator= (const Shared_ptr<T>& that) noexcept {
+        // 自我赋值
+        if(that == *this) return *this;
+
+        Shared_ptr<T>().swap(*this); // 将自己置空，控制权交给一个临时匿名对象
+        ptr_ = that.ptr_;
+        use_count_ = that.use_count_;
+        if(ptr_) ++use_count_;
+        return *this;
+    }
+    Shared_ptr& operator= (Shared_ptr<T>&& that) noexcept {
+        // 不会有右值的自我赋值
+        // p = std::move(p); // error
+
+        Shared_ptr<T>().swap(*this); // 将自己置空，控制权交给一个临时匿名对象
+        ptr_ = that.ptr_;
+        use_count_ = that.use_count_;
+
+        // 源指针是右值，将其置空
+        that.ptr_ = nullptr;
+        that.use_count_ = nullptr;
+        return *this;
+    }
 
     // for make_shared()
     // Shared_ptr(int* use_count, T* const ptr)
@@ -38,43 +72,34 @@ public:
     //     ++(*use_count_);
     // };
     
-    Shared_ptr(const Shared_ptr<T>& that)
-        : use_count_(that.use_count_),
-          ptr_(that.ptr_) {
-        ++(*use_count_);
-    }
-
-    Shared_ptr& operator= (const Shared_ptr<T>& that) {
-        use_count_ = that.use_count_;
-        ++use_count_;
-        ptr_ = that.use_count_;
-    }
 
     ~Shared_ptr() {
-        if(--(*use_count_) == 0) {
+        if(ptr_ && --(*use_count_) == 0) {
             delete ptr_;
             delete use_count_;
         }
     }
 
-    T& operator*() const {
-        return *ptr_;
+    void swap(Shared_ptr<T>& that) {
+        std::swap(ptr_, that.ptr_);
+        std::swap(use_count_, that.use_count_);
     }
 
-    T* operator->() const {
-        return ptr_;
-    }
+    bool operator!() const { return !ptr_;}
 
-    int use_count() const {
-        return *use_count_;
-    }
+    T& operator*() const { return *ptr_; }
 
-    bool unique() const {
-        return *use_count_ == 1;
-    }
+    T* operator->() const { return ptr_; }
+
+    T* get() const { return ptr_; }
+
+    int use_count() const { return *use_count_;}
+
+    bool unique() const { return *use_count_ == 1;}
+
 private:
-    int* use_count_;
     T* ptr_;
+    int* use_count_;
 };
 
 #endif // SHARED_PTR_H
