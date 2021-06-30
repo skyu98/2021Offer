@@ -8,6 +8,8 @@
 <br>
 * [**C也能实现封装、继承和多态！**](https://blog.csdn.net/onlyshi/article/details/81672279?utm_medium=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.baidujs&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2%7Edefault%7EBlogCommendFromMachineLearnPai2%7Edefault-1.baidujs)
 
+---
+
 # 基础知识
 ## 1.函数的调用过程
 **核心：`%rsp`栈顶指针的动态变化过程**
@@ -88,7 +90,7 @@
 #### 4. 显式运行时链接
 * `dlopen()`加载动态库、`dlsym()`依据符号获取对应函数地址指针
 * `dlerror()`检查加载错误、 `dlclose`卸载动态库
-
+---
 # 一、C++关键字
 
 ## const关键字
@@ -246,10 +248,12 @@ void free(void *ptr); // ptr为malloc所得到的指针
 |扩充已分配的内存|无法直观处理|realloc|
 |是否相互调用|可以调用|不能调用new/delete|
 |分配时内存不足|客户可以定制处理|只能返回NULL|
-|函数重载|允许|不允许|
+|函数重载|允许重载<br>`operator new/delete`|不允许|
 |构造/析构函数|调用|不调用|
 
 https://www.cnblogs.com/engraver-lxw/p/8600816.html
+
+具体的operator new重载请见[new_test.cc](./demo/new_test.cc)
 
 ### 4.sizeof关键字确定所需空间大小
 可以通过```sizeof()```来确定基本类型与类类型的大小。
