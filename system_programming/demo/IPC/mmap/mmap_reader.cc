@@ -2,6 +2,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string>
+#include <string.h>
 #include <iostream>
 
 struct student

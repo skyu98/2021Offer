@@ -14,36 +14,26 @@
 */
 
 // RAII
-class writeLockGuard
-{
+class writeLockGuard {
 public:
     writeLockGuard(::pthread_rwlock_t* rwlock)
-        : rwlock_(rwlock)
-    {
+        : rwlock_(rwlock) {
         pthread_rwlock_wrlock(rwlock_);
     }
 
-    ~writeLockGuard()
-    {
-        pthread_rwlock_unlock(rwlock_);
-    }
+    ~writeLockGuard() { pthread_rwlock_unlock(rwlock_);}
 private:
     pthread_rwlock_t* rwlock_;
 };
 
-class readLockGuard
-{
+class readLockGuard {
 public:
     readLockGuard(::pthread_rwlock_t* rwlock)
-        : rwlock_(rwlock)
-    {
+        : rwlock_(rwlock) {
         pthread_rwlock_rdlock(rwlock_);
     }
 
-    ~readLockGuard()
-    {
-        pthread_rwlock_unlock(rwlock_);
-    }
+    ~readLockGuard() { pthread_rwlock_unlock(rwlock_); }
 private:
     pthread_rwlock_t* rwlock_;
 };
@@ -51,19 +41,15 @@ private:
 pthread_rwlock_t rwlock;
 int global_counter = 0; // 共享资源
 
-void writerThread(int id)
-{
+void writerThread(int id) {
     int save = 0;
-    while(true)
-    {
-       {
-            writeLockGuard lock_guard(&rwlock);
-            save = global_counter;
-            usleep(1000); // 该时间段内，依旧独占写锁
-            std::cout << "=====Writer " << id
-                    << " before: cnt = " <<  save
-                    << " after: cnt = " << ++global_counter << std::endl;
-       }
+    while(true) {
+        writeLockGuard lock_guard(&rwlock);
+        save = global_counter;
+        usleep(1000); // 该时间段内，依旧独占写锁
+        std::cout << "=====Writer " << id
+                << " before: cnt = " <<  save
+                << " after: cnt = " << ++global_counter << std::endl;
     }
     usleep(5000000);
     
@@ -71,8 +57,7 @@ void writerThread(int id)
 
 void readerThread(int id)
 {
-    while(true)
-    {
+    while(true) {
         {
             readLockGuard lock_guard(&rwlock);
             printf("-------------Reader %d, cnt = %d\n", id, global_counter);
@@ -81,28 +66,24 @@ void readerThread(int id)
     }
 }
 
-int main()
-{
+int main() {
     std::vector<std::thread> thrds;
     thrds.reserve(8);
 
     pthread_rwlock_init(&rwlock, NULL);
     // 3个写线程
-    for(int i = 0;i < 2;++i)
-    {
+    for(int i = 0;i < 2;++i) {
         std::thread thrd(std::bind(writerThread, i));
         thrds.emplace_back(std::move(thrd));
     }
 
     // 5个读线程
-    for(int i = 0;i < 4;++i)
-    {
+    for(int i = 0;i < 4;++i) {
         std::thread thrd(std::bind(readerThread, i));
         thrds.emplace_back(std::move(thrd));
     }
 
-    for(auto& thrd : thrds)
-    {
+    for(auto& thrd : thrds) {
         thrd.join();
     }
 

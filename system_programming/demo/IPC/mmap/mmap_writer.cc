@@ -1,10 +1,10 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 #include <string>
 
-struct student
-{
+struct student {
     student(int id):id_(id), name_("unknown"){}
     student(int id, const std::string& name):id_(id), name_(name){}
     /* data */

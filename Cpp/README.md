@@ -383,7 +383,8 @@ private:
 * 按照派生类生成虚函数表的规则，Derived类将拷贝两个父类的虚表，并且分别覆盖其中被重写的虚函数。
 * 在这里，**Derived类有两个虚表指针，分别放在两个sub-object的开头**（具体见实验）
 * **多继承时，不同的Base类型指针指向的地址不再固定在对象起始处**，而是有对应的偏移。(**在向上转换时（子类转化为基类），编译器会自动给转换的基类指针加上对应基类在子类对象中的偏移位置，使得基类指针指向子类对象中对应基类的虚指针所在的位置。**)
-* *更深一点*：Derived中的Base1在这里是**主基类**，它的**虚表中放有Derived所有的虚函数（包括重写Base2中的函数）**，而Base2的虚表中，放的是`Thunk Derived::func2()`，即会**地址偏移到Base1的虚表中调用函数**。
+* *更深一点*：Derived中的Base1在这里是**主基类**，它的**虚表中放有Derived所有的虚函数（包括重写Base2中的函数）**，而Base2的虚表中，放的是`Thunk Derived::func2()`，即会**地址偏移到Base1的虚表中调用函数**。这里会有一个专门的位置存放**往上的偏移大小**。
+
 ---
 # 二、智能指针
 [陈硕大佬的文章](https://blog.csdn.net/solstice/article/details/8547547)
@@ -391,7 +392,7 @@ private:
 ![avatar](./imgs/shared_ptr.png)
 
 ## 1. 线程安全
-* `shared_ptr`的**引用计数本身是安全且无锁（std::atomic::fetch_add）**的，但**对象的读写则不是**，因为`shared_ptr`有两个数据成员，**读写操作不能原子化（A线程尚未修改完毕，B线程对其进行了修改）。**
+* `shared_ptr`的**引用计数本身是安全且无锁（std::atomic::fetch_add）**的，但**对象的读写则不是**，因为`shared_ptr`有**两个数据成员，读写操作不能原子化（A线程尚未修改完毕，B线程对其进行了修改）。**
 
 * `shared_ptr`的线程安全级别和内建类型、标准库容器、`std::string`一样
 
@@ -450,9 +451,87 @@ Derived(int id, const string& name)
 ---
 # 四、C++11新特性
 
-* 1. 智能指针（见第二章）
+## 1. 智能指针（见第二章）
 
-* 2. `lambda`匿名函数
+## 2. `bind`原理及用法
+http://blog.think-async.com/2010/04/bind-illustrated.html
+* 场景一：作为**适配器**(`Adaptor`)统一`task`接口
+```cpp
+// 执行机构接受void(*)()类型的task
+typedef std::function<void()> task; 
+void Handler::handle(const task& t) {
+    t();
+}
+
+void func1() {}
+
+task t1 = func1; // 实际上是使用一个函数指针
+handle(t1);
+
+// 然而有时期待使用的参数，和接口要求的参数并不匹配
+// 考虑这样一个函数，我们需要传入一个参数age
+void func2(int age) {
+    printf("%d\n", age);
+}
+// task t2 = bar; // error: 参数类型不匹配
+
+int age = ::getAge();
+// bind作为适配器（Adaptor），改变函数接口形式
+task func2 = std::bind(bar, age); // func2是一个类型为void(*)()的仿函数，重载了operator ()
+handle(func2); // OK
+```
+
+* 场景二：回调函数为**成员函数**时的参数绑定(**将this指针显式绑定**)
+```cpp
+class Foo {
+// Foo接受void(*)(int)类型的回调函数
+typedef std::function<void(int)> Callback; 
+public:
+    /* 设置回调函数 */
+    void setCallback(const Callback& cb) { cb_ = cb; }
+private:
+    /* 在有新动作到来时，执行回调函数 */
+    void onNewAction() {
+        int age = ::getAge();
+        cb_(age);
+    }
+    Callback cb_;
+};
+
+class Bar {
+public:
+    void MemberFunc(int age) {
+        printf("MemFunc: %d\n", age);
+    }
+};
+
+void func1(int age) { 
+    printf("Func: %d\n", age); 
+}
+
+int main() {
+    Foo foo;
+
+    foo.setCallback(func1); // 直接使用函数指针，ok
+    foo.onNewAction();
+
+    /*  使用std::placeholders代替具体参数，代表这个参数是调用时即提供；
+        而不是作为task时常见的，bind时即提供全部参数
+    */
+    foo.setCallback(std::bind(func1, std::placeholders::_1)); // 使用bind
+    foo.onNewAction();
+
+    // 如何回调Member function呢？
+    Bar bar;
+    // Bar::MemberFunc的类型是void(Bar::*)(int)，隐式包含一个this指针
+    Callback cb = std::bind(&Bar::MemberFunc, &bar, std::placeholders::_1);
+    foo.setCallback(cb);
+    foo.onNewAction();
+}
+```
+* `bind`还涉及到很多细节和用法，比如`pass by ref`、 `private函数`的权限问题，都在`Burger`项目中有所见，这里不加深究。
+
+## 3. `lambda`匿名函数（也是仿函数）
 ```cpp
 // lambda func
 auto func1 = [int& total, int offset](const Foo& elem)->void {

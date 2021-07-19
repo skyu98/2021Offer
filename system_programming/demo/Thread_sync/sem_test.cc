@@ -26,10 +26,8 @@ Semaphore product(0);       // 一开始0个产品
 Semaphore mutex(1);     // 初始化为1，相当于互斥锁
 std::queue<int> queue;
 
-void producer()
-{
-    for(int i = 0;i < 50;++i)
-    {
+void producer() {
+    for(int i = 0;i < 50;++i) {
         blank.wait();   // 试图获取空格资源
         mutex.wait();      // 试图获取进入临界区权限资源，体现互斥性
 
@@ -41,10 +39,8 @@ void producer()
     }
 }
 
-void consumer()
-{
-    for(int i = 0;i < 50;++i)
-    {
+void consumer() {
+    for(int i = 0;i < 50;++i) {
         product.wait();   // 试图获取产品资源
         mutex.wait();       
 
@@ -57,16 +53,14 @@ void consumer()
     }
 }
 
-int main()
-{
+int main() {
     std::vector<std::thread> thrds;
     thrds.reserve(2);
 
     thrds.emplace_back(std::thread(producer));
     thrds.emplace_back(std::thread(consumer));
 
-    for(auto& thrd : thrds)
-    {
+    for(auto& thrd : thrds) {
         thrd.join();
     }
     return 0;

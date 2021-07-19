@@ -6,10 +6,8 @@
 // 此例中屏幕为共享资源，我们需要两个线程有序输出
 std::mutex mutex;
 
-void threadFunc()
-{
-    for(int i = 0;i < 50;++i)
-    {
+void threadFunc() {
+    for(int i = 0;i < 50;++i) {
         {
             std::lock_guard<std::mutex> lock(mutex);
             std::cout << "hello ";
@@ -17,14 +15,12 @@ void threadFunc()
         }
         sleep(1); // 确保其他线程获得锁
     }
-};
+}
 
-int main()
-{
+int main() {
     std::thread lowerThread(threadFunc);
     lowerThread.detach();
-    for(int i = 0;i < 50;++i)
-    {
+    for(int i = 0;i < 50;++i) {
         {
             std::lock_guard<std::mutex> lock(mutex);
             std::cout << "HELLO ";
